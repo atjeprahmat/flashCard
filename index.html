@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kartu Baca Interaktif Anak TK - 200 Kata 2 Suku Kata</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Fredoka', 'Nunito', 'sans-serif'],
+                        display: ['Fredoka', 'sans-serif']
+                    },
+                    colors: {
+                        brand: {
+                            pink: '#FF6B8B',
+                            yellow: '#FFD166',
+                            green: '#06D6A0',
+                            blue: '#118AB2',
+                            purple: '#A06CD5',
+                            dark: '#073B4C'
+                        }
+                    },
+                    boxShadow: {
+                        'fun': '0 10px 0px rgba(0,0,0,0.15)',
+                        'fun-sm': '0 5px 0px rgba(0,0,0,0.12)',
+                        'card': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #f0fdf4;
+            background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+        }
+        .card-perspective {
+            perspective: 1000px;
+        }
+        .card-inner-flip {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card-flipped {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans text-slate-800 flex flex-col justify-between selection:bg-brand-yellow selection:text-slate-900">
+
+    <header class="bg-white border-b-4 border-brand-green/30 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 bg-brand-yellow rounded-2xl flex items-center justify-center text-2xl shadow-fun-sm border-2 border-amber-300">
+                    📖
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-slate-800 tracking-wide flex items-center gap-2">
+                        Kartu Baca Anak <span class="bg-brand-pink text-white text-xs px-2.5 py-0.5 rounded-full font-extrabold tracking-normal shadow-sm">TK A/B</span>
+                    </h1>
+                    <p class="text-xs text-slate-500 font-medium">200 Kata Sederhana (2 Suku Kata)</p>
+                </div>
+            </div>
+
+            <!-- Main App Nav Tabs -->
+            <nav class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+                <button onclick="switchTab('flashcard')" id="tab-flashcard" class="px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-brand-green text-white shadow-fun-sm">
+                    🎴 <span>Kartu Baca</span>
+                </button>
+                <button onclick="switchTab('game')" id="tab-game" class="px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200">
+                    🎮 <span>Kuis Tebak</span>
+                </button>
+                <button onclick="switchTab('catalog')" id="tab-catalog" class="px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200">
+                    📚 <span>Semua Kata</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-6 flex-1 w-full flex flex-col">
+
+        <!-- Top Controls / Toolbar -->
+        <div class="bg-white p-4 rounded-2xl border-2 border-slate-200 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-4">
+            <!-- Category Selector -->
+            <div class="flex items-center gap-2 min-w-[200px] flex-1 sm:flex-initial">
+                <span class="text-sm font-bold text-slate-500">Kategori:</span>
+                <select id="categoryFilter" onchange="handleCategoryChange()" class="w-full sm:w-auto bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-brand-blue">
+                    <option value="ALL">🌟 Semua Kata (200 Kata)</option>
+                    <option value="benda">🎒 Benda Sederhana</option>
+                    <option value="hewan">🐱 Hewan & Alam</option>
+                    <option value="tubuh">👁️ Anggota Tubuh</option>
+                    <option value="rumah">🏠 Rumah & Makanan</option>
+                    <option value="sifat">😊 Sifat & Perasaan</option>
+                    <option value="keluarga">👨‍👩‍👧 Keluarga & Lainnya</option>
+                </select>
+            </div>
+
+            <!-- Voice Controls -->
+            <div class="flex items-center gap-3 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold text-slate-500">Suara:</span>
+                    <select id="speedSelect" class="bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold text-xs rounded-xl px-2.5 py-2 focus:outline-none focus:border-brand-blue">
+                        <option value="0.5">🐢 Sangat Pelan</option>
+                        <option value="0.75" selected>🚶 Pelan (Belajar)</option>
+                        <option value="1.0">🏃 Normal</option>
+                    </select>
+                </div>
+
+                <!-- Syllable Highlight Toggle -->
+                <button onclick="toggleSyllables()" id="syllableBtn" class="px-3 py-2 border-2 border-slate-200 rounded-xl font-bold text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 flex items-center gap-1.5 transition">
+                    🎨 <span>Suku Kata Warna</span>
+                </button>
+            </div>
+        </div>
+
+        <section id="section-flashcard" class="flex-1 flex flex-col justify-center items-center max-w-2xl mx-auto w-full">
+            
+            <!-- Progress & Stats -->
+            <div class="w-full flex items-center justify-between mb-3 text-sm font-bold text-slate-600">
+                <span id="cardProgressText">Kartu 1 dari 200</span>
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleFavoriteCurrent()" id="favCurrentBtn" class="text-xl hover:scale-125 transition-transform" title="Tandai Favorit">
+                        🤍
+                    </button>
+                    <span id="masteredBadge" class="hidden bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full text-xs font-extrabold flex items-center gap-1">
+                        ✅ Sudah Hafl
+                    </span>
+                </div>
+            </div>
+
+            <!-- Main Interactive Card -->
+            <div class="w-full card-perspective my-2">
+                <div id="flashcardBox" class="w-full bg-white border-4 border-slate-300 rounded-3xl p-8 sm:p-12 shadow-card flex flex-col items-center justify-between min-h-[320px] sm:min-h-[380px] relative transition-all duration-300 transform hover:-translate-y-1">
+                    
+                    <!-- Top Scissors/Decor Tag -->
+                    <div class="absolute -top-4 left-6 bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full border border-amber-300 flex items-center gap-1">
+                        ✂️ Kartu Baca #<span id="cardNumberDisplay">001</span>
+                    </div>
+
+                    <!-- Category Badge -->
+                    <div class="w-full flex justify-end">
+                        <span id="cardCategoryDisplay" class="bg-slate-100 text-slate-600 font-bold text-xs px-3 py-1 rounded-xl">
+                            Benda Sederhana
+                        </span>
+                    </div>
+
+                    <!-- Center Word Display -->
+                    <div class="my-auto py-6 text-center w-full">
+                        <div id="wordDisplay" class="text-6xl sm:text-8xl font-black text-slate-900 tracking-wider mb-2 font-display select-none">
+                            buku
+                        </div>
+                        <p id="hintDisplay" class="text-base sm:text-lg text-slate-500 font-semibold italic mt-2 opacity-90 transition-opacity">
+                            "Benda tempat kita membaca dan menggambar"
+                        </p>
+                    </div>
+
+                    <!-- Card Footer Actions -->
+                    <div class="w-full flex items-center justify-between pt-4 border-t-2 border-dashed border-slate-100 gap-3">
+                        <button onclick="speakWord()" class="bg-sky-500 hover:bg-sky-600 active:translate-y-1 text-white font-extrabold px-5 py-3 rounded-2xl shadow-fun-sm flex items-center gap-2 text-base transition">
+                            🔊 <span>Dengarkan</span>
+                        </button>
+                        
+                        <button onclick="markMastered()" id="markBtn" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-2 border-emerald-300 font-bold px-4 py-3 rounded-2xl text-sm transition flex items-center gap-1.5">
+                            ✨ <span>Tandai Bisa</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="w-full flex items-center justify-between gap-3 mt-6">
+                <button onclick="prevCard()" class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-300 text-slate-700 font-extrabold py-3.5 px-4 rounded-2xl shadow-fun-sm text-base flex items-center justify-center gap-2 transition active:translate-y-1">
+                    👈 <span>Sebelumnya</span>
+                </button>
+
+                <button onclick="shuffleCards()" class="bg-amber-100 hover:bg-amber-200 border-2 border-amber-300 text-amber-800 font-extrabold py-3.5 px-5 rounded-2xl shadow-fun-sm text-base transition active:translate-y-1" title="Acak Kartu">
+                    🔀
+                </button>
+
+                <button onclick="nextCard()" class="flex-1 bg-brand-green hover:bg-emerald-600 border-2 border-emerald-700 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-fun text-base flex items-center justify-center gap-2 transition active:translate-y-1">
+                    <span>Berikutnya</span> 👉
+                </button>
+            </div>
+        </section>
+
+        <section id="section-game" class="hidden flex-1 flex flex-col items-center max-w-2xl mx-auto w-full">
+            <div class="w-full bg-white border-4 border-purple-200 rounded-3xl p-6 sm:p-8 shadow-card flex flex-col items-center">
+                
+                <!-- Game Header Info -->
+                <div class="w-full flex items-center justify-between mb-6 pb-4 border-b-2 border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="text-3xl">🎯</span>
+                        <div>
+                            <h2 class="font-bold text-lg text-slate-800">Tebak Kata Suara</h2>
+                            <p class="text-xs text-slate-500">Dengarkan suaranya lalu pilih kata yang benar!</p>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 border-2 border-amber-200 text-amber-800 font-extrabold px-4 py-2 rounded-2xl flex items-center gap-1.5 text-base">
+                        ⭐ <span id="gameScore">0</span> Poin
+                    </div>
+                </div>
+
+                <!-- Speaker Prompt Button -->
+                <div class="my-4 text-center">
+                    <button onclick="playQuizAudio()" class="w-24 h-24 bg-brand-purple hover:bg-purple-600 text-white rounded-3xl shadow-fun border-4 border-purple-300 flex items-center justify-center text-4xl transition transform active:scale-95 mx-auto mb-3">
+                        🔊
+                    </button>
+                    <p class="text-sm font-bold text-slate-600">Tekan tombol di atas untuk mendengar kata!</p>
+                </div>
+
+                <!-- Quiz Options Grid -->
+                <div id="quizOptionsContainer" class="grid grid-cols-2 gap-4 w-full mt-6">
+                    <!-- Options injected via JavaScript -->
+                </div>
+
+                <!-- Quiz Result Message -->
+                <div id="quizResult" class="mt-6 text-center h-8 font-bold text-lg"></div>
+
+                <button onclick="nextQuizQuestion()" id="nextQuizBtn" class="mt-4 hidden bg-brand-green hover:bg-emerald-600 text-white font-extrabold px-6 py-3 rounded-2xl shadow-fun-sm transition">
+                    Pertanyaan Berikutnya ➡️
+                </button>
+            </div>
+        </section>
+
+        <section id="section-catalog" class="hidden flex-1 flex flex-col w-full">
+            <!-- Search & Catalog Info -->
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div class="relative flex-1 min-w-[240px]">
+                    <input type="text" id="searchInput" oninput="filterCatalog()" placeholder="🔍 Cari kata (contoh: buku, bola, mandi)..." class="w-full bg-white border-2 border-slate-200 font-bold text-sm rounded-2xl px-4 py-3 pl-10 focus:outline-none focus:border-brand-blue shadow-sm">
+                </div>
+                <div class="text-sm font-bold text-slate-500">
+                    Menampilkan <span id="catalogCount" class="text-brand-blue font-extrabold">200</span> kata
+                </div>
+            </div>
+
+            <!-- Words Grid -->
+            <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto p-1">
+                <!-- Catalog Cards Injected via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t-2 border-slate-200 py-4 mt-8">
+        <div class="max-w-5xl mx-auto px-4 text-center text-xs font-bold text-slate-500 flex flex-wrap items-center justify-between gap-2">
+            <span>📚 Kartu Baca Anak TK - 200 Kata Utuh (2 Suku Kata)</span>
+            <span class="text-slate-400">Siap Pakai untuk HP, Tablet & Laptop</span>
+        </div>
+    </footer>
+
+    <script>
+        // 200 Complete 2-syllable Indonesian words data categorized
+        const WORDS_DATABASE = [
+            // Page 1
+            { word: "buku", cat: "benda", hint: "Benda tempat kita membaca dan menulis" },
+            { word: "bola", cat: "benda", hint: "Mainan bulat yang suka ditendang" },
+            { word: "mata", cat: "tubuh", hint: "Anggota tubuh untuk melihat" },
+            { word: "kuda", cat: "hewan", hint: "Hewan gagah berlalari kencang" },
+            { word: "topi", cat: "benda", hint: "Dipakai di kepala saat panas" },
+            { word: "roti", cat: "rumah", hint: "Makanan lezat untuk sarapan" },
+            { word: "sapu", cat: "benda", hint: "Alat untuk membersihkan lantai" },
+            { word: "dadu", cat: "benda", hint: "Kotak bertitik untuk bermain ular tangga" },
+            { word: "susu", cat: "rumah", hint: "Minuman sehat berwarna putih" },
+            { word: "kaki", cat: "tubuh", hint: "Bagian tubuh bawah untuk berjalan" },
+            
+            // Page 2
+            { word: "baju", cat: "benda", hint: "Pakaian yang kita pakai sehari-hari" },
+            { word: "meja", cat: "benda", hint: "Tempat menaruh buku di kelas" },
+            { word: "roda", cat: "benda", hint: "Benda bulat di bawah sepeda atau mobil" },
+            { word: "kera", cat: "hewan", hint: "Hewan pemanjat yang suka pisang" },
+            { word: "padi", cat: "hewan", hint: "Tanaman di sawah calon beras" },
+            { word: "pipi", cat: "tubuh", hint: "Bagian wajah imut di samping hidung" },
+            { word: "pita", cat: "benda", hint: "Hiasan cantik untuk rambut atau kado" },
+            { word: "madu", cat: "rumah", hint: "Cairan manis hasil olahan lebah" },
+            { word: "kaca", cat: "benda", hint: "Benda bening tempat kita bercermin" },
+            { word: "duri", cat: "hewan", hint: "Bagian tajam pada bunga mawar" },
+
+            // Page 3
+            { word: "peta", cat: "benda", hint: "Gambar penunjuk jalan dan wilayah" },
+            { word: "sore", cat: "sifat", hint: "Waktu saat matahari mulai terbenam" },
+            { word: "pari", cat: "hewan", hint: "Ikan laut bentuknya lebar pipih" },
+            { word: "kece", cat: "sifat", hint: "Kata lain dari bergaya dan keren" },
+            { word: "lupa", cat: "sifat", hint: "Lawan kata dari ingat" },
+            { word: "pagi", cat: "sifat", hint: "Waktu terbit matahari dan berangkat sekolah" },
+            { word: "nasi", cat: "rumah", hint: "Makanan pokok orang Indonesia" },
+            { word: "gula", cat: "rumah", hint: "Bumbu dapur rasanya manis" },
+            { word: "kopi", cat: "rumah", hint: "Minuman hangat kegemaran ayah" },
+            { word: "paku", cat: "benda", hint: "Benda besi tajam untuk menempel kayu" },
+
+            // Page 4
+            { word: "palu", cat: "benda", hint: "Alat untuk memukul paku" },
+            { word: "tali", cat: "benda", hint: "Alat panjang untuk mengikat benda" },
+            { word: "gigi", cat: "tubuh", hint: "Berwarna putih di dalam mulut untuk mengunyah" },
+            { word: "dada", cat: "tubuh", hint: "Bagian tubuh depan tempat jantung berada" },
+            { word: "bina", cat: "sifat", hint: "Mendidik atau membimbing menjadi baik" },
+            { word: "dina", cat: "keluarga", hint: "Nama anak perempuan yang rajin" },
+            { word: "kisi", cat: "benda", hint: "Celah garis-garis pada jendela" },
+            { word: "doni", cat: "keluarga", hint: "Nama anak laki-laki yang baik" },
+            { word: "bini", cat: "keluarga", hint: "Panggilan lain untuk istri" },
+            { word: "satu", cat: "benda", hint: "Angka pertama setelah nol" },
+
+            // Page 5
+            { word: "sari", cat: "rumah", hint: "Inti manis dari buah atau bunga" },
+            { word: "lari", cat: "sifat", hint: "Melangkah sangat cepat memakai kaki" },
+            { word: "mari", cat: "sifat", hint: "Kata ajakan untuk melakukan bersama" },
+            { word: "cari", cat: "sifat", hint: "Berusaha menemukan benda yang hilang" },
+            { word: "jari", cat: "tubuh", hint: "Ada sepuluh di tangan kita" },
+            { word: "hari", cat: "sifat", hint: "Senin, Selasa, hingga Minggu" },
+            { word: "buri", cat: "rumah", hint: "Bagian paling belakang" },
+            { word: "curi", cat: "sifat", hint: "Mengambil tanpa izin (tidak boleh)" },
+            { word: "muri", cat: "keluarga", hint: "Nama teman yang suka menolong" },
+            { word: "batu", cat: "hewan", hint: "Benda keras alami di tanah" },
+
+            // Page 6
+            { word: "ratu", cat: "keluarga", hint: "Pemimpin perempuan di kerajaan" },
+            { word: "kutu", cat: "hewan", hint: "Serangga kecil di rambut (harus keramas)" },
+            { word: "mutu", cat: "sifat", hint: "Kualitas barang yang bagus" },
+            { word: "pintu", cat: "benda", hint: "Jalan masuk dan keluar ruangan" },
+            { word: "lampu", cat: "benda", hint: "Penerang ruangan saat gelap" },
+            { word: "bambu", cat: "hewan", hint: "Tanaman tinggi favorit hewan panda" },
+            { word: "tahu", cat: "rumah", hint: "Makanan sehat olahan kedelai warna putih" },
+            { word: "bahu", cat: "tubuh", hint: "Bagian tubuh di atas lengan" },
+            { word: "dagu", cat: "tubuh", hint: "Bagian wajah di bawah mulut" },
+            { word: "lagu", cat: "benda", hint: "Musik dan nyanyian yang merdu" },
+
+            // Page 7
+            { word: "ragu", cat: "sifat", hint: "Perasaan belum yakin" },
+            { word: "sagu", cat: "rumah", hint: "Tepung olahan tanaman khas timur" },
+            { word: "keju", cat: "rumah", hint: "Olahan susu olahan yang lezat" },
+            { word: "maju", cat: "sifat", hint: "Melangkah ke arah depan" },
+            { word: "laju", cat: "sifat", hint: "Gerakan berjalan atau berlari cepat" },
+            { word: "tuju", cat: "sifat", hint: "Arah tempat yang ingin didatangi" },
+            { word: "muda", cat: "sifat", hint: "Belum tua" },
+            { word: "pada", cat: "sifat", hint: "Kata petunjuk tempat atau waktu" },
+            { word: "nada", cat: "benda", hint: "Bunyi teratur dalam musik (Do Re Mi)" },
+            { word: "lada", cat: "rumah", hint: "Bumbu dapur pemberi rasa pedas" },
+
+            // Page 8
+            { word: "bapa", cat: "keluarga", hint: "Panggilan lain untuk orang tua ayah" },
+            { word: "sapa", cat: "sifat", hint: "Menegur teman dengan ramah" },
+            { word: "rupa", cat: "sifat", hint: "Bentuk atau wajah seseorang" },
+            { word: "dupa", cat: "benda", hint: "Benda pembakar yang beraroma harum" },
+            { word: "kura", cat: "hewan", hint: "Hewan lambat bercangkang keras" },
+            { word: "mura", cat: "sifat", hint: "Harganya terjangkau" },
+            { word: "pura", cat: "rumah", hint: "Tempat ibadah saudara umat Hindu" },
+            { word: "sura", cat: "benda", hint: "Kata ucapan yang agung" },
+            { word: "poci", cat: "benda", hint: "Wadah tanah liat untuk menyeduh teh" },
+            { word: "cuci", cat: "sifat", hint: "Membersihkan baju atau tangan dengan air" },
+
+            // Page 9
+            { word: "suci", cat: "sifat", hint: "Bersih bebas dari kotoran" },
+            { word: "pici", cat: "benda", hint: "Topi peci yang dipakai saat beribadah" },
+            { word: "pola", cat: "benda", hint: "Bentuk gambar rancangan awal" },
+            { word: "mola", cat: "hewan", hint: "Jenis ikan laut raksasa unik" },
+            { word: "bebe", cat: "keluarga", hint: "Panggilan imut untuk adik bayi" },
+            { word: "cece", cat: "keluarga", hint: "Panggilan untuk kakak perempuan" },
+            { word: "dede", cat: "keluarga", hint: "Panggilan sayang untuk adik kecil" },
+            { word: "lele", cat: "hewan", hint: "Ikan kumis yang tinggal di air tawar" },
+            { word: "ikan", cat: "hewan", hint: "Hewan bersisik yang berenang di air" },
+            { word: "ular", cat: "hewan", hint: "Hewan melata tanpa kaki yang panjang" },
+
+            // Page 10
+            { word: "ulat", cat: "hewan", hint: "Hewan kecil pemberani calon kupu-kupu" },
+            { word: "obat", cat: "rumah", hint: "Diminum saat tubuh terasa sakit" },
+            { word: "obor", cat: "benda", hint: "Api penerang dari kayu atau bambu" },
+            { word: "otak", cat: "tubuh", hint: "Organ kepala untuk berpikir pintar" },
+            { word: "otot", cat: "tubuh", hint: "Bagian tubuh kuat pencipta tenaga" },
+            { word: "atap", cat: "benda", hint: "Penutup paling atas rumah dari hujan" },
+            { word: "ayam", cat: "hewan", hint: "Unggas berkokok di pagi hari" },
+            { word: "awan", cat: "hewan", hint: "Benda putih lembut menggantung di langit" },
+            { word: "adik", cat: "keluarga", hint: "Saudara kandung yang lebih muda" },
+            { word: "alun", cat: "hewan", hint: "Ombak kecil lembut di laut" },
+
+            // Page 11
+            { word: "pohon", cat: "hewan", hint: "Tumbuhan tinggi berdaun hijau rindang" },
+            { word: "daun", cat: "hewan", hint: "Bagian hijau pada tanaman" },
+            { word: "akar", cat: "hewan", hint: "Bagian tumbuhan di dalam tanah" },
+            { word: "buah", cat: "rumah", hint: "Makanan sehat seperti apel dan pisang" },
+            { word: "semut", cat: "hewan", hint: "Serangga kecil rajin bergotong royong" },
+            { word: "bebek", cat: "hewan", hint: "Unggas yang suka berenang dan berbunyi kwek-kwek" },
+            { word: "cicak", cat: "hewan", hint: "Hewan penangkap nyamuk di dinding" },
+            { word: "katak", cat: "hewan", hint: "Hewan hijau pemakan serangga yang melompat" },
+            { word: "kancil", cat: "hewan", hint: "Hewan hutan yang terkenal sangat cerdik" },
+            { word: "burung", cat: "hewan", hint: "Hewan bersayap yang indah terbang di udara" },
+
+            // Page 12
+            { word: "kambing", cat: "hewan", hint: "Hewan pemakan rumput berbunyi mbek" },
+            { word: "kucing", cat: "hewan", hint: "Hewan peliharaan lucu berbunyi meong" },
+            { word: "anjing", cat: "hewan", hint: "Hewan setia penjaga rumah" },
+            { word: "merah", cat: "sifat", hint: "Warna mawar dan bendera bagian atas" },
+            { word: "kuning", cat: "sifat", hint: "Warna pisang matang dan matahari" },
+            { word: "hijau", cat: "sifat", hint: "Warna daun dan rumput segar" },
+            { word: "hitam", cat: "sifat", hint: "Warna rambut dan langit malam" },
+            { word: "putih", cat: "sifat", hint: "Warna susu dan awan cerah" },
+            { word: "biru", cat: "sifat", hint: "Warna lautan luas dan langit cerah" },
+            { word: "ungu", cat: "sifat", hint: "Warna buah anggur manis" },
+
+            // Page 13
+            { word: "emas", cat: "benda", hint: "Logam mulia berwarna kuning berkilau" },
+            { word: "sendok", cat: "benda", hint: "Alat untuk menyuap makanan" },
+            { word: "garpu", cat: "benda", hint: "Alat bertanduk untuk mengaitkan mi" },
+            { word: "piring", cat: "benda", hint: "Wadah ceper tempat menaruh nasi" },
+            { word: "gelas", cat: "benda", hint: "Wadah untuk minum air atau susu" },
+            { word: "wajan", cat: "benda", hint: "Alat dapur ibu untuk menggoreng" },
+            { word: "panci", cat: "benda", hint: "Alat dapur untuk memasak sup hangat" },
+            { word: "pisau", cat: "benda", hint: "Alat tajam untuk memotong buah dan sayur" },
+            { word: "kompor", cat: "benda", hint: "Alat pelahir api untuk memasak" },
+            { word: "dapur", cat: "rumah", hint: "Ruangan rumah tempat ibu memasak" },
+
+            // Page 14
+            { word: "pensil", cat: "benda", hint: "Alat untuk menulis dan menggambar" },
+            { word: "kertas", cat: "benda", hint: "Lembaran putih tempat melukis" },
+            { word: "papan", cat: "benda", hint: "Tempat guru menulis di depan kelas" },
+            { word: "kaos", cat: "benda", hint: "Pakaian santai lengan pendek" },
+            { word: "jaket", cat: "benda", hint: "Baju tebal saat cuaca dingin" },
+            { word: "rumah", cat: "rumah", hint: "Tempat tinggal dan berkumpul keluarga" },
+            { word: "kamar", cat: "rumah", hint: "Ruangan tempat kita beristirahat" },
+            { word: "kasur", cat: "rumah", hint: "Tempat empuk untuk tidur nyenyak" },
+            { word: "bantal", cat: "rumah", hint: "Penyangga kepala empuk saat tidur" },
+            { word: "guling", cat: "rumah", hint: "Bantal panjang yang enak dipeluk" },
+
+            // Page 15
+            { word: "cermin", cat: "benda", hint: "Kaca untuk melihat wajah sendiri" },
+            { word: "makan", cat: "rumah", hint: "Kegiatan menyantap nasi saat lapar" },
+            { word: "minum", cat: "rumah", hint: "Kegiatan meneguk air saat haus" },
+            { word: "tidur", cat: "rumah", hint: "Kegiatan istirahat pejamkan mata" },
+            { word: "mandi", cat: "tubuh", hint: "Membersihkan badan memakai sabun dan air" },
+            { word: "duduk", cat: "sifat", hint: "Menempelkan tubuh di atas kursi" },
+            { word: "senang", cat: "sifat", hint: "Perasaan bahagia gembira" },
+            { word: "sedih", cat: "sifat", hint: "Perasaan saat kehilangan atau menangis" },
+            { word: "marah", cat: "sifat", hint: "Perasaan kesal (harus cepat sabar)" },
+            { word: "takut", cat: "sifat", hint: "Perasaan merinding saat gelap" },
+
+            // Page 16
+            { word: "kaget", cat: "sifat", hint: "Perasaan terkejut tiba-tiba" },
+            { word: "lucu", cat: "sifat", hint: "Hal menyenangkan yang membuat tertawa" },
+            { word: "ramah", cat: "sifat", hint: "Suka tersenyum dan menyapa teman" },
+            { word: "baik", cat: "sifat", hint: "Suka menolong dan berbagi" },
+            { word: "pintar", cat: "sifat", hint: "Anak rajin yang banyak tahu" },
+            { word: "rajin", cat: "sifat", hint: "Suka belajar dan bantu orang tua" },
+            { word: "ayah", cat: "keluarga", hint: "Orang tua laki-laki yang hebat" },
+            { word: "ibu", cat: "keluarga", hint: "Orang tua perempuan yang penuh kasih" },
+            { word: "kakak", cat: "keluarga", hint: "Saudara kandung yang lebih tua" },
+            { word: "kakek", cat: "keluarga", hint: "Ayah dari orang tua kita" },
+
+            // Page 17
+            { word: "nenek", cat: "keluarga", hint: "Ibu dari orang tua kita yang penyayang" },
+            { word: "paman", cat: "keluarga", hint: "Saudara laki-laki ayah atau ibu" },
+            { word: "bibi", cat: "keluarga", hint: "Saudara perempuan ayah atau ibu" },
+            { word: "teman", cat: "keluarga", hint: "Kawan tempat bermain bersama" },
+            { word: "guru", cat: "keluarga", hint: "Pendidik kita di sekolah" },
+            { word: "sawah", cat: "hewan", hint: "Lahan berlumpur tempat pak tani menanam padi" },
+            { word: "kebun", cat: "hewan", hint: "Taman tempat menanam bunga dan buah" },
+            { word: "pasar", cat: "rumah", hint: "Tempat ramai membeli sayur dan ikan" },
+            { word: "taman", cat: "hewan", hint: "Tempat indah bermain perosotan" },
+            { word: "jalan", cat: "benda", hint: "Akses tempat lewat kendaraan" },
+
+            // Page 18
+            { word: "kolam", cat: "hewan", hint: "Wadah air tempat ikan berenang" },
+            { word: "sumur", cat: "rumah", hint: "Sumber air bersih dari dalam tanah" },
+            { word: "pagar", cat: "benda", hint: "Pembatas rumah di bagian depan" },
+            { word: "tanah", cat: "hewan", hint: "Tempat tumbuhnya pepohonan" },
+            { word: "pasir", cat: "hewan", hint: "Butiran halus di tepi pantai" },
+            { word: "hujan", cat: "hewan", hint: "Air yang turun dari langit" },
+            { word: "petir", cat: "hewan", hint: "Kilatan cahaya terang di langit malam" },
+            { word: "angin", cat: "hewan", hint: "Udara bergerak yang sejuk" },
+            { word: "malam", cat: "sifat", hint: "Waktu gelap dipenuhi bintang" },
+            { word: "siang", cat: "sifat", hint: "Waktu terang ada matahari" },
+
+            // Page 19
+            { word: "bulan", cat: "hewan", hint: "Benda langit bersinar indah di malam hari" },
+            { word: "ombak", cat: "hewan", hint: "Gulungan air indah di tepi laut" },
+            { word: "pantai", cat: "hewan", hint: "Tepi laut tempat bermain pasir" },
+            { word: "sungai", cat: "hewan", hint: "Aliran air panjang menuju laut" },
+            { word: "danau", cat: "hewan", hint: "Genangan air luas dikelilingi daratan" },
+            { word: "hutan", cat: "hewan", hint: "Wilayah rindang tempat tinggal hewan" },
+            { word: "bukit", cat: "hewan", hint: "Tumpukan tanah tinggi lebih kecil dari gunung" },
+            { word: "lembah", cat: "hewan", hint: "Daratan rendah di antara dua bukit" },
+            { word: "sehat", cat: "sifat", hint: "Tubuh bugar tidak sakit" },
+            { word: "sakit", cat: "sifat", hint: "Kondisi badan lemas butuh minum obat" },
+
+            // Page 20
+            { word: "murni", cat: "sifat", hint: "Bersih asli tanpa campuran" },
+            { word: "bersih", cat: "sifat", hint: "Bebas dari kuman dan kotoran" },
+            { word: "wangi", cat: "sifat", hint: "Aroma harum yang menyenangkan" },
+            { word: "harum", cat: "sifat", hint: "Wangi seperti bunga mawar" },
+            { word: "manis", cat: "sifat", hint: "Rasa seperti gula dan madu" },
+            { word: "pahit", cat: "sifat", hint: "Rasa obat (tapi menyehatkan)" },
+            { word: "pedas", cat: "sifat", hint: "Rasa hangat seperti cabai" },
+            { word: "asin", cat: "sifat", hint: "Rasa gurih seperti garam" }
+        ];
+
+        let activeTab = 'flashcard';
+        let currentFilteredList = [...WORDS_DATABASE];
+        let currentIndex = 0;
+        let masteredWords = new Set(JSON.parse(localStorage.getItem('mastered_words') || '[]'));
+        let favoriteWords = new Set(JSON.parse(localStorage.getItem('fav_words') || '[]'));
+        let showSyllables = false;
+        let quizScore = 0;
+        let currentQuizWord = null;
+
+        // Colors for Syllable Highlight
+        const SYLLABLE_COLORS = ['text-sky-600', 'text-rose-500', 'text-amber-500', 'text-emerald-600'];
+
+        // Initial setup on load
+        window.onload = function() {
+            updateFlashcard();
+            renderCatalog();
+            setupQuiz();
+        };
+
+        function switchTab(tabName) {
+            activeTab = tabName;
+            
+            // Hide all sections
+            document.getElementById('section-flashcard').classList.add('hidden');
+            document.getElementById('section-game').classList.add('hidden');
+            document.getElementById('section-catalog').classList.add('hidden');
+
+            // Reset Tab styling
+            const tabs = ['flashcard', 'game', 'catalog'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (btn) {
+                    btn.className = "px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200";
+                }
+            });
+
+            // Show active section
+            document.getElementById(`section-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            if (activeBtn) {
+                activeBtn.className = "px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-brand-green text-white shadow-fun-sm";
+            }
+
+            if (tabName === 'game') {
+                setupQuiz();
+            }
+        }
+
+        function handleCategoryChange() {
+            const selected = document.getElementById('categoryFilter').value;
+            if (selected === 'ALL') {
+                currentFilteredList = [...WORDS_DATABASE];
+            } else {
+                currentFilteredList = WORDS_DATABASE.filter(item => item.cat === selected);
+            }
+            currentIndex = 0;
+            updateFlashcard();
+            renderCatalog();
+        }
+
+        function toggleSyllables() {
+            showSyllables = !showSyllables;
+            const btn = document.getElementById('syllableBtn');
+            if (showSyllables) {
+                btn.classList.add('bg-amber-100', 'border-amber-300', 'text-amber-800');
+            } else {
+                btn.classList.remove('bg-amber-100', 'border-amber-300', 'text-amber-800');
+            }
+            updateFlashcard();
+        }
+
+        // Helper to separate 2 suku kata roughly
+        function formatWordSyllables(word) {
+            if (!showSyllables) return word;
+            
+            // Auto split simple 2 syllable words roughly at mid point vowel boundaries
+            const len = word.length;
+            const mid = Math.floor(len / 2);
+            let p1 = word.slice(0, mid);
+            let p2 = word.slice(mid);
+
+            return `<span class="${SYLLABLE_COLORS[0]}">${p1}</span><span class="${SYLLABLE_COLORS[1]}">${p2}</span>`;
+        }
+
+        function updateFlashcard() {
+            if (currentFilteredList.length === 0) return;
+            
+            const currentObj = currentFilteredList[currentIndex];
+            
+            // Text and ID
+            document.getElementById('wordDisplay').innerHTML = formatWordSyllables(currentObj.word);
+            document.getElementById('hintDisplay').innerText = `"${currentObj.hint}"`;
+            document.getElementById('cardProgressText').innerText = `Kartu ${currentIndex + 1} dari ${currentFilteredList.length}`;
+            
+            // Calculate actual card number from original DB
+            const originalIndex = WORDS_DATABASE.findIndex(w => w.word === currentObj.word) + 1;
+            document.getElementById('cardNumberDisplay').innerText = String(originalIndex).padStart(3, '0');
+            
+            // Category text
+            const catMap = {
+                benda: "🎒 Benda", hewan: "🐱 Hewan & Alam", tubuh: "👁️ Anggota Tubuh",
+                rumah: "🏠 Rumah/Makanan", sifat: "😊 Sifat", keluarga: "👨‍👩‍👧 Keluarga"
+            };
+            document.getElementById('cardCategoryDisplay').innerText = catMap[currentObj.cat] || "Umum";
+
+            // Mastered Status
+            const isMastered = masteredWords.has(currentObj.word);
+            const masteredBadge = document.getElementById('masteredBadge');
+            const markBtn = document.getElementById('markBtn');
+
+            if (isMastered) {
+                masteredBadge.classList.remove('hidden');
+                markBtn.innerHTML = `✅ <span>Sudah Hafl</span>`;
+                markBtn.className = "bg-emerald-500 text-white font-bold px-4 py-3 rounded-2xl text-sm transition flex items-center gap-1.5 shadow-fun-sm";
+            } else {
+                masteredBadge.classList.add('hidden');
+                markBtn.innerHTML = `✨ <span>Tandai Bisa</span>`;
+                markBtn.className = "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-2 border-emerald-300 font-bold px-4 py-3 rounded-2xl text-sm transition flex items-center gap-1.5";
+            }
+
+            // Favorite Status
+            const favBtn = document.getElementById('favCurrentBtn');
+            if (favoriteWords.has(currentObj.word)) {
+                favBtn.innerText = '❤️';
+            } else {
+                favBtn.innerText = '🤍';
+            }
+        }
+
+        function nextCard() {
+            if (currentIndex < currentFilteredList.length - 1) {
+                currentIndex++;
+            } else {
+                currentIndex = 0; // loop
+            }
+            updateFlashcard();
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+            } else {
+                currentIndex = currentFilteredList.length - 1;
+            }
+            updateFlashcard();
+        }
+
+        function shuffleCards() {
+            for (let i = currentFilteredList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentFilteredList[i], currentFilteredList[j]] = [currentFilteredList[j], currentFilteredList[i]];
+            }
+            currentIndex = 0;
+            updateFlashcard();
+        }
+
+        function markMastered() {
+            const word = currentFilteredList[currentIndex].word;
+            if (masteredWords.has(word)) {
+                masteredWords.delete(word);
+            } else {
+                masteredWords.add(word);
+                // Trigger celebratory confetti for kids
+                confetti({ particleCount: 30, spread: 60, origin: { y: 0.7 } });
+            }
+            localStorage.setItem('mastered_words', JSON.stringify([...masteredWords]));
+            updateFlashcard();
+            renderCatalog();
+        }
+
+        function toggleFavoriteCurrent() {
+            const word = currentFilteredList[currentIndex].word;
+            if (favoriteWords.has(word)) {
+                favoriteWords.delete(word);
+            } else {
+                favoriteWords.add(word);
+            }
+            localStorage.setItem('fav_words', JSON.stringify([...favoriteWords]));
+            updateFlashcard();
+        }
+
+        function speakWord(customWord = null) {
+            const wordToSpeak = customWord || currentFilteredList[currentIndex].word;
+            
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop current speaking
+
+                const utterance = new SpeechSynthesisUtterance(wordToSpeak);
+                utterance.lang = 'id-ID';
+                
+                const speed = parseFloat(document.getElementById('speedSelect').value || "0.75");
+                utterance.rate = speed;
+                utterance.pitch = 1.1; // Slightly cheerful pitch for children
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("Fitur suara tidak didukung oleh browser Anda.");
+            }
+        }
+
+        function setupQuiz() {
+            if (WORDS_DATABASE.length < 4) return;
+            
+            // Pick a random target word
+            const targetObj = WORDS_DATABASE[Math.floor(Math.random() * WORDS_DATABASE.length)];
+            currentQuizWord = targetObj;
+
+            // Pick 3 random distractors
+            let distractors = [];
+            while (distractors.length < 3) {
+                let randomItem = WORDS_DATABASE[Math.floor(Math.random() * WORDS_DATABASE.length)];
+                if (randomItem.word !== targetObj.word && !distractors.includes(randomItem)) {
+                    distractors.push(randomItem);
+                }
+            }
+
+            // Combine and shuffle choices
+            let choices = [targetObj, ...distractors];
+            for (let i = choices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [choices[i], choices[j]] = [choices[j], choices[i]];
+            }
+
+            // Render Choices
+            const container = document.getElementById('quizOptionsContainer');
+            container.innerHTML = '';
+
+            choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = "bg-slate-50 hover:bg-slate-100 border-4 border-slate-200 text-slate-800 font-extrabold text-2xl sm:text-3xl py-6 rounded-2xl shadow-fun-sm transition transform active:scale-95";
+                btn.innerText = choice.word;
+                btn.onclick = () => checkQuizAnswer(choice.word, btn);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('quizResult').innerText = '';
+            document.getElementById('nextQuizBtn').classList.add('hidden');
+
+            // Play sound prompt automatically after short delay
+            setTimeout(() => {
+                playQuizAudio();
+            }, 300);
+        }
+
+        function playQuizAudio() {
+            if (currentQuizWord) {
+                speakWord(currentQuizWord.word);
+            }
+        }
+
+        function checkQuizAnswer(selectedWord, btnElement) {
+            const resultDiv = document.getElementById('quizResult');
+            
+            if (selectedWord === currentQuizWord.word) {
+                // Correct!
+                btnElement.className = "bg-emerald-500 border-4 border-emerald-600 text-white font-extrabold text-2xl sm:text-3xl py-6 rounded-2xl shadow-fun transition transform scale-105";
+                resultDiv.className = "mt-6 text-center h-8 font-bold text-xl text-emerald-600 animate-bounce";
+                resultDiv.innerText = "🎉 Benar Sekali! Pintar!";
+                
+                quizScore += 10;
+                document.getElementById('gameScore').innerText = quizScore;
+                
+                confetti({ particleCount: 40, spread: 70, origin: { y: 0.6 } });
+                document.getElementById('nextQuizBtn').classList.remove('hidden');
+            } else {
+                // Wrong
+                btnElement.className = "bg-rose-100 border-4 border-rose-300 text-rose-600 font-extrabold text-2xl sm:text-3xl py-6 rounded-2xl opacity-60";
+                resultDiv.className = "mt-6 text-center h-8 font-bold text-lg text-rose-500";
+                resultDiv.innerText = "❌ Coba dengarkan lagi ya!";
+                playQuizAudio();
+            }
+        }
+
+        function nextQuizQuestion() {
+            setupQuiz();
+        }
+
+        function renderCatalog(filteredData = null) {
+            const grid = document.getElementById('catalogGrid');
+            const listToRender = filteredData || currentFilteredList;
+            
+            grid.innerHTML = '';
+            document.getElementById('catalogCount').innerText = listToRender.length;
+
+            listToRender.forEach((item, idx) => {
+                const card = document.createElement('div');
+                const isMastered = masteredWords.has(item.word);
+                
+                card.className = `p-3 rounded-2xl border-2 flex flex-col justify-between items-center text-center cursor-pointer transition transform hover:-translate-y-1 ${
+                    isMastered ? 'bg-emerald-50 border-emerald-300' : 'bg-white border-slate-200 hover:border-brand-blue'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between w-full text-[10px] text-slate-400 font-bold mb-1">
+                        <span>#${String(WORDS_DATABASE.findIndex(w => w.word === item.word) + 1).padStart(3, '0')}</span>
+                        <span>${isMastered ? '✅' : ''}</span>
+                    </div>
+                    <div class="text-2xl font-black text-slate-800 font-display my-1">${item.word}</div>
+                    <button onclick="event.stopPropagation(); speakWord('${item.word}')" class="mt-1 text-xs bg-sky-100 hover:bg-sky-200 text-sky-700 font-bold px-2.5 py-1 rounded-xl transition">
+                        🔊 Dengar
+                    </button>
+                `;
+
+                card.onclick = () => {
+                    const foundIndex = currentFilteredList.findIndex(w => w.word === item.word);
+                    if (foundIndex !== -1) {
+                        currentIndex = foundIndex;
+                    } else {
+                        currentFilteredList = [...WORDS_DATABASE];
+                        currentIndex = WORDS_DATABASE.findIndex(w => w.word === item.word);
+                    }
+                    switchTab('flashcard');
+                    updateFlashcard();
+                };
+
+                grid.appendChild(card);
+            });
+        }
+
+        function filterCatalog() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (!query) {
+                renderCatalog(currentFilteredList);
+                return;
+            }
+
+            const searchResults = currentFilteredList.filter(item => 
+                item.word.toLowerCase().includes(query) || 
+                item.hint.toLowerCase().includes(query)
+            );
+            renderCatalog(searchResults);
+        }
+    </script>
+</body>
+</html>
